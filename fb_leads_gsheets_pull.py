@@ -1,0 +1,89 @@
+import gspread
+import time
+import pdb
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+    
+
+def wait_by_class(Element1):
+    try:
+        element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, Element1)))
+
+    except TimeoutException:
+        print("Loading took too much time!")
+
+
+def wait_by_id(Element1):
+    try:
+        element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.ID, Element1)))
+
+    except TimeoutException:
+        print("Loading took too much time!")
+
+
+whatsappLinkCol = 'C'
+count = 1
+driver = webdriver.Firefox(executable_path='./geckodriver')
+driver.maximize_window()
+
+gc = gspread.service_account(filename='credentials.json')
+# or by sheet name: gc.open("TestList")
+sh = gc.open_by_key("1CBJcjG7cPC-dzK0nREBprHlmiNOkLkGogmDcr-SLFE0")
+#sh = gc.open("BE_YOUR_OWN_CAREER_COUNSELLOR_Webinar_13_May2020")
+#Opening google sheet
+pdb.set_trace()
+worksheet = sh.worksheet("Jitain _MSG")
+
+
+def singleRowFetch():
+    while True:
+        count=count+1
+        try:
+            url = worksheet.acell(whatsappLinkCol+str(count)).value
+
+            if (url):
+
+                driver.get(url)
+                time.sleep(3)
+                wait_by_class('_1U1xa')
+                send_btn = driver.find_element_by_class_name('_1U1xa')
+                send_btn.send_keys(Keys.ENTER)
+            else:
+                driver.quit()
+                print( ' - Stopped at count:' + str(count))
+                break
+                
+                
+        except Exception as e:
+            print(str(e) +' - Stopped at count:' + str(count))
+            pass
+    
+
+#col_values(column number)
+linkList = [item for item in worksheet.col_values(3) if item]
+
+for whatsappLink in linkList:
+    try:
+        url = whatsappLink
+        if (url):
+            driver.get(url)
+            time.sleep(3)
+            wait_by_class('_1U1xa')
+            send_btn = driver.find_element_by_class_name('_1U1xa')
+            send_btn.send_keys(Keys.ENTER)
+            time.sleep(3)
+        else:
+            #driver.quit()
+            print(' - Stopped at count:' + str(count))
+            break
+    except Exception as e:
+            print(str(e) +' - Stopped at count:' + str(count))
+            pass
+
+driver.quit()
